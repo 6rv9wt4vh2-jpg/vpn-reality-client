@@ -1,0 +1,2 @@
+# Placeholder VLESS + Reality share link (do not use as-is — not a real server)
+vless://00000000-0000-4000-8000-000000000000@YOUR_SERVER_IP_OR_DOMAIN:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.cloudflare.com&fp=chrome&pbk=sCMyd0MxQEessoya6gphVLM9lOX9-5tuWBMRlskeuwA&sid=abcd1234&spx=%2F#example-reality

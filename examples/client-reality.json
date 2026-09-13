@@ -1,0 +1,24 @@
+{
+  "name": "example-reality",
+  "address": "YOUR_SERVER_IP_OR_DOMAIN",
+  "port": 443,
+  "uuid": "00000000-0000-4000-8000-000000000000",
+  "flow": "xtls-rprx-vision",
+  "encryption": "none",
+  "network": "tcp",
+  "security": "reality",
+  "socks_port": 10808,
+  "http_port": 10809,
+  "notes": "Syntactically valid placeholder Reality publicKey (generated locally). NOT a real server \u2014 replace address/uuid/pbk/sid/sni with YOUR values. Do not commit production keys.",
+  "reality": {
+    "public_key": "sCMyd0MxQEessoya6gphVLM9lOX9-5tuWBMRlskeuwA",
+    "short_id": "abcd1234",
+    "server_names": [
+      "www.cloudflare.com",
+      "www.microsoft.com"
+    ],
+    "fingerprint": "chrome",
+    "spider_x": "/",
+    "dest": "www.cloudflare.com:443"
+  }
+}

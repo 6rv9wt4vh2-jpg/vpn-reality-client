@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VPN Reality Client</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --border: #2d3a4f;
+      --text: #e7ecf3;
+      --muted: #8b9bb4;
+      --accent: #3d8bfd;
+      --ok: #3dd68c;
+      --bad: #f07178;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.45;
+    }
+    header {
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    h1 { font-size: 1.15rem; margin: 0; font-weight: 600; }
+    .badge {
+      font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 999px;
+      border: 1px solid var(--border); color: var(--muted);
+    }
+    .badge.on { color: var(--ok); border-color: var(--ok); }
+    .badge.off { color: var(--bad); border-color: var(--bad); }
+    main { max-width: 860px; margin: 0 auto; padding: 1.5rem; display: grid; gap: 1rem; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.15rem;
+    }
+    h2 { font-size: 0.95rem; margin: 0 0 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    textarea, input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 0.65rem 0.75rem; font: inherit;
+    }
+    textarea { min-height: 90px; resize: vertical; font-family: ui-monospace, monospace; font-size: 0.85rem; }
+    .row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    button {
+      background: var(--accent); color: #fff; border: 0; border-radius: 8px;
+      padding: 0.55rem 0.95rem; font: inherit; cursor: pointer; font-weight: 560;
+    }
+    button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    button.danger { background: #8b2942; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .profile {
+      display: flex; justify-content: space-between; gap: 0.75rem; align-items: center;
+      padding: 0.75rem 0; border-top: 1px solid var(--border);
+    }
+    .profile:first-of-type { border-top: 0; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .msg { margin-top: 0.75rem; font-size: 0.85rem; color: var(--muted); white-space: pre-wrap; }
+    .warn { color: #e6c07b; font-size: 0.8rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>VLESS + Reality Client</h1>
+    <span id="statusBadge" class="badge off">offline</span>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Статус</h2>
+      <div id="statusText" class="meta">…</div>
+      <div class="row">
+        <button class="secondary" onclick="refresh()">Обновить</button>
+        <button class="danger" onclick="disconnect()">Disconnect</button>
+      </div>
+      <p class="warn">Локальный SOCKS5 (по умолчанию 127.0.0.1:10808) и HTTP-прокси. Это не системный VPN-туннель — укажите прокси в браузере/приложении. Не гарантирует обход блокировок.</p>
+    </section>
+
+    <section class="card">
+      <h2>Импорт</h2>
+      <textarea id="importText" placeholder="vless://uuid@host:443?encryption=none&amp;flow=xtls-rprx-vision&amp;security=reality&amp;sni=www.example.com&amp;fp=chrome&amp;pbk=...&amp;sid=...&amp;spx=%2F#name&#10;или JSON профиля"></textarea>
+      <div class="row">
+        <button onclick="doImport()">Import</button>
+      </div>
+      <div id="importMsg" class="msg"></div>
+    </section>
+
+    <section class="card">
+      <h2>Профили</h2>
+      <div id="profiles">Нет профилей</div>
+    </section>
+  </main>
+  <script>
+    async function api(path, opts) {
+      const r = await fetch(path, opts);
+      const t = await r.text();
+      let data; try { data = JSON.parse(t); } catch { data = { detail: t }; }
+      if (!r.ok) throw new Error(data.detail || t || r.statusText);
+      return data;
+    }
+    async function refresh() {
+      const st = await api('/api/status');
+      const badge = document.getElementById('statusBadge');
+      badge.textContent = st.running ? 'online' : 'offline';
+      badge.className = 'badge ' + (st.running ? 'on' : 'off');
+      document.getElementById('statusText').textContent =
+        st.message + (st.binary ? ' · ' + st.binary : '');
+      const data = await api('/api/profiles');
+      const box = document.getElementById('profiles');
+      if (!data.profiles.length) { box.textContent = 'Нет профилей'; return; }
+      box.innerHTML = data.profiles.map(p => `
+        <div class="profile">
+          <div>
+            <strong>${escapeHtml(p.name)}</strong>
+            ${p.id === data.active_id ? ' <span class="badge on">active</span>' : ''}
+            <div class="meta">${escapeHtml(p.address)}:${p.port} · SNI ${escapeHtml((p.reality.server_names||[])[0]||'')}</div>
+          </div>
+          <div class="row">
+            <button onclick="connect('${p.id}')">Connect</button>
+            <button class="secondary" onclick="removeProfile('${p.id}')">Delete</button>
+          </div>
+        </div>`).join('');
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    async function doImport() {
+      const text = document.getElementById('importText').value;
+      const msg = document.getElementById('importMsg');
+      try {
+        const p = await api('/api/import', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ text })
+        });
+        msg.textContent = 'Импортировано: ' + p.name;
+        document.getElementById('importText').value = '';
+        await refresh();
+      } catch (e) { msg.textContent = 'Ошибка: ' + e.message; }
+    }
+    async function connect(id) {
+      try { await api('/api/connect/' + id, { method: 'POST' }); await refresh(); }
+      catch (e) { alert(e.message); }
+    }
+    async function disconnect() {
+      await api('/api/disconnect', { method: 'POST' }); await refresh();
+    }
+    async function removeProfile(id) {
+      if (!confirm('Удалить профиль?')) return;
+      await api('/api/profiles/' + id, { method: 'DELETE' }); await refresh();
+    }
+    refresh();
+    setInterval(refresh, 5000);
+  </script>
+</body>
+</html>
