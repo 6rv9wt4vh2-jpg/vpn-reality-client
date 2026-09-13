@@ -12,6 +12,16 @@
 
 Python CLI + optional local FastAPI dashboard. Profiles store Reality fields (`publicKey`, `shortId`, `serverNames`, `fingerprint`, `spiderX`, optional `dest`). The app generates xray JSON, starts/stops the core, and listens on `127.0.0.1:10808` (SOCKS5) and optionally `10809` (HTTP).
 
+
+## iOS app (scaffold)
+
+SwiftUI + Packet Tunnel Provider Xcode project lives in **[`ios/`](ios/README.md)**.
+
+- Open `ios/VpnReality/VpnReality.xcodeproj` on a Mac (Xcode 15+)
+- Profiles, Reality fields, JSON/`vless://` import shared with this desktop model
+- Tunnel core (LibXray / sing-box) is **not** bundled — link on Mac; see `ios/VpnReality/ThirdParty/`
+- Requires paid Apple Developer for on-device VPN; this repo does **not** ship an App Store binary
+
 ## Stack
 
 | Piece | Choice |
@@ -110,11 +120,13 @@ examples/            # Placeholder client config + URI
 docs/                # Server Reality checklist
 bin/                 # Downloaded xray (gitignored)
 data/                # profiles + runtime config (gitignored contents)
+ios/                 # SwiftUI + Packet Tunnel Xcode scaffold (see ios/README.md)
 ```
 
 ## Limitations (MVP)
 
-- No system-wide TUN/routing — proxy only
+- Desktop: no system-wide TUN/routing — proxy only
+- iOS: Xcode scaffold only until LibXray/sing-box is linked (see `ios/README.md`)
 - No auto system proxy configuration
 - No tray/native GUI (web UI is local-only)
 - No traffic split UI beyond basic private-IP direct rule

@@ -34,3 +34,14 @@ Thumbs.db
 # Secrets — never commit real keys
 *.key
 secrets/
+
+# iOS / Xcode
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/**/DerivedData/
+ios/**/build/
+ios/**/*.ipa
+ios/**/*.dSYM
+ios/VpnReality/ThirdParty/*.xcframework/
+ios/VpnReality/ThirdParty/LibXray*/
+*.xcframework/
