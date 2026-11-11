@@ -10,6 +10,7 @@ build/
 venv/
 .env
 .pytest_cache/
+ios/VpnRealityCore/.build/
 .mypy_cache/
 .ruff_cache/
 
@@ -44,4 +45,6 @@ ios/**/*.ipa
 ios/**/*.dSYM
 ios/VpnReality/ThirdParty/*.xcframework/
 ios/VpnReality/ThirdParty/LibXray*/
+ios/VpnReality/ThirdParty/LibXray.local.xcconfig
+ios/VpnReality/ThirdParty/*.zip
 *.xcframework/

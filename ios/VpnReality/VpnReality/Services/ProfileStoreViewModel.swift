@@ -1,10 +1,12 @@
-import Foundation
 import Combine
+import Foundation
+import VpnRealityCore
 
 @MainActor
 final class ProfileStoreViewModel: ObservableObject {
     @Published private(set) var items: [VlessProfile] = []
     @Published private(set) var activeId: String?
+    @Published var lastError: String?
 
     var activeProfile: VlessProfile? {
         guard let activeId else { return items.first }
@@ -12,23 +14,28 @@ final class ProfileStoreViewModel: ObservableObject {
     }
 
     func reload() {
-        let store = AppGroupStore.shared.load()
-        items = store.profiles
-        activeId = store.activeId
+        do {
+            let store = try ProfileVault.shared.load()
+            items = store.profiles
+            activeId = store.activeId
+            lastError = nil
+        } catch {
+            lastError = error.localizedDescription
+        }
     }
 
     func upsert(_ profile: VlessProfile) throws {
-        try AppGroupStore.shared.upsert(profile)
+        try ProfileVault.shared.upsert(profile)
         reload()
     }
 
     func delete(id: String) throws {
-        try AppGroupStore.shared.delete(id: id)
+        try ProfileVault.shared.delete(id: id)
         reload()
     }
 
     func setActive(id: String?) throws {
-        try AppGroupStore.shared.setActive(id: id)
+        try ProfileVault.shared.setActive(id: id)
         reload()
     }
 }

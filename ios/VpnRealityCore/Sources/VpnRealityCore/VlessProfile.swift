@@ -1,20 +1,20 @@
 import Foundation
 
-/// Stored client profile: VLESS + Reality outbound.
-struct VlessProfile: Codable, Identifiable, Equatable, Hashable, Sendable {
-    var id: String
-    var name: String
-    var address: String
-    var port: Int
-    var uuid: String
-    var flow: String
-    var encryption: String
-    var network: String
-    var security: String
-    var reality: RealitySettings
-    var socksPort: Int
-    var httpPort: Int?
-    var notes: String
+/// Stored client profile: VLESS + Reality. Field names match `vpn_client.models.VlessProfile`.
+public struct VlessProfile: Codable, Identifiable, Equatable, Hashable, Sendable {
+    public var id: String
+    public var name: String
+    public var address: String
+    public var port: Int
+    public var uuid: String
+    public var flow: String
+    public var encryption: String
+    public var network: String
+    public var security: String
+    public var reality: RealitySettings
+    public var socksPort: Int
+    public var httpPort: Int?
+    public var notes: String
 
     enum CodingKeys: String, CodingKey {
         case id, name, address, port, uuid, flow, encryption, network, security, reality, notes
@@ -22,7 +22,7 @@ struct VlessProfile: Codable, Identifiable, Equatable, Hashable, Sendable {
         case httpPort = "http_port"
     }
 
-    init(
+    public init(
         id: String = UUID().uuidString,
         name: String,
         address: String,
@@ -52,26 +52,25 @@ struct VlessProfile: Codable, Identifiable, Equatable, Hashable, Sendable {
         self.notes = notes
     }
 
-    func primarySNI() -> String {
+    public func primarySNI() -> String {
         reality.serverNames.first ?? "www.example.com"
     }
 
-    /// Human-readable subtitle for lists.
-    var endpointSummary: String {
+    public var endpointSummary: String {
         "\(address):\(port)"
     }
 }
 
-struct ProfilesStoreFile: Codable, Equatable, Sendable {
-    var profiles: [VlessProfile]
-    var activeId: String?
+public struct ProfilesStoreFile: Codable, Equatable, Sendable {
+    public var profiles: [VlessProfile]
+    public var activeId: String?
 
     enum CodingKeys: String, CodingKey {
         case profiles
         case activeId = "active_id"
     }
 
-    init(profiles: [VlessProfile] = [], activeId: String? = nil) {
+    public init(profiles: [VlessProfile] = [], activeId: String? = nil) {
         self.profiles = profiles
         self.activeId = activeId
     }

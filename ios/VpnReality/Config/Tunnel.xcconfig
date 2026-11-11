@@ -1,0 +1,7 @@
+// VpnRealityTunnel. LibXray.local.xcconfig is written by ThirdParty/fetch-libxray.sh
+// and is gitignored. Without it the extension builds and the tunnel fails closed.
+#include? "../ThirdParty/LibXray.local.xcconfig"
+
+HEADER_SEARCH_PATHS = $(inherited) $(LIBXRAY_HEADER_SEARCH_PATHS)
+OTHER_LDFLAGS = $(inherited) $(LIBXRAY_LDFLAGS)
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) $(LIBXRAY_CONDITION)
