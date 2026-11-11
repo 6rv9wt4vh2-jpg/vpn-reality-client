@@ -17,18 +17,20 @@
 		C10000000000000000000015 /* vless-uri.example.txt in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000013 /* vless-uri.example.txt */; };
 		C10000000000000000000007 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* PacketTunnelProvider.swift */; };
 		C10000000000000000000008 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* Constants.swift */; };
-		C10000000000000000000009 /* RealitySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000D /* RealitySettings.swift */; };
-		C1000000000000000000000A /* VlessProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* VlessProfile.swift */; };
-		C1000000000000000000000B /* ProfileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* ProfileImporter.swift */; };
-		C1000000000000000000000C /* XrayConfigBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* XrayConfigBuilder.swift */; };
-		C1000000000000000000000D /* AppGroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* AppGroupStore.swift */; };
 		C1000000000000000000000E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000C /* Constants.swift */; };
-		C1000000000000000000000F /* RealitySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000D /* RealitySettings.swift */; };
-		C10000000000000000000010 /* VlessProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000E /* VlessProfile.swift */; };
-		C10000000000000000000011 /* ProfileImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* ProfileImporter.swift */; };
-		C10000000000000000000012 /* XrayConfigBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* XrayConfigBuilder.swift */; };
-		C10000000000000000000013 /* AppGroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* AppGroupStore.swift */; };
 		C10000000000000000000016 /* VpnRealityTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* VpnRealityTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C10000000000000000000017 /* ProfileVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000016 /* ProfileVault.swift */; };
+		C10000000000000000000018 /* ProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000017 /* ProfileDetailView.swift */; };
+		C10000000000000000000019 /* UtunFileDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000018 /* UtunFileDescriptor.swift */; };
+		C1000000000000000000001A /* LibXrayRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000019 /* LibXrayRuntime.swift */; };
+		C1000000000000000000001B /* TunnelStatusStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001A /* TunnelStatusStore.swift */; };
+		C1000000000000000000001C /* TunnelNetworkSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001E /* TunnelNetworkSettings.swift */; };
+		C10000000000000000000020 /* VpnRealityCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000041 /* VpnRealityCore */; };
+		C10000000000000000000021 /* VpnRealityCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000042 /* VpnRealityCore */; };
+		C10000000000000000000022 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001C /* PrivacyInfo.xcprivacy */; };
+		C10000000000000000000023 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001D /* PrivacyInfo.xcprivacy */; };
+		C10000000000000000000024 /* ProfileVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000016 /* ProfileVault.swift */; };
+		C10000000000000000000025 /* TunnelStatusStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000001A /* TunnelStatusStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,15 +72,20 @@
 		B1000000000000000000000A /* VpnRealityTunnel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VpnRealityTunnel.entitlements; sourceTree = "<group>"; };
 		B1000000000000000000000B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B1000000000000000000000C /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		B1000000000000000000000D /* RealitySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealitySettings.swift; sourceTree = "<group>"; };
-		B1000000000000000000000E /* VlessProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VlessProfile.swift; sourceTree = "<group>"; };
-		B1000000000000000000000F /* ProfileImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImporter.swift; sourceTree = "<group>"; };
-		B10000000000000000000010 /* XrayConfigBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XrayConfigBuilder.swift; sourceTree = "<group>"; };
-		B10000000000000000000011 /* AppGroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupStore.swift; sourceTree = "<group>"; };
 		B10000000000000000000012 /* client-reality.example.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "client-reality.example.json"; sourceTree = "<group>"; };
 		B10000000000000000000013 /* vless-uri.example.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "vless-uri.example.txt"; sourceTree = "<group>"; };
 		B10000000000000000000014 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		B10000000000000000000015 /* fetch-libxray.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "fetch-libxray.sh"; sourceTree = "<group>"; };
+		B10000000000000000000016 /* ProfileVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileVault.swift; sourceTree = "<group>"; };
+		B10000000000000000000017 /* ProfileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailView.swift; sourceTree = "<group>"; };
+		B10000000000000000000018 /* UtunFileDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtunFileDescriptor.swift; sourceTree = "<group>"; };
+		B10000000000000000000019 /* LibXrayRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibXrayRuntime.swift; sourceTree = "<group>"; };
+		B1000000000000000000001A /* TunnelStatusStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelStatusStore.swift; sourceTree = "<group>"; };
+		B1000000000000000000001B /* LibXray-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LibXray-Bridging-Header.h"; sourceTree = "<group>"; };
+		B1000000000000000000001C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B1000000000000000000001D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B1000000000000000000001E /* TunnelNetworkSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelNetworkSettings.swift; sourceTree = "<group>"; };
+		B10000000000000000000030 /* Tunnel.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Tunnel.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,6 +93,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C10000000000000000000020 /* VpnRealityCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,6 +101,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C10000000000000000000021 /* VpnRealityCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +114,7 @@
 				A10000000000000000000019 /* VpnReality */,
 				A1000000000000000000001A /* VpnRealityTunnel */,
 				A1000000000000000000001B /* Shared */,
+				A10000000000000000000023 /* Config */,
 				A10000000000000000000022 /* ThirdParty */,
 				A10000000000000000000004 /* Products */,
 			);
@@ -128,6 +138,7 @@
 				A10000000000000000000020 /* Services */,
 				A10000000000000000000021 /* Resources */,
 				B10000000000000000000006 /* Assets.xcassets */,
+				B1000000000000000000001C /* PrivacyInfo.xcprivacy */,
 				B10000000000000000000007 /* VpnReality.entitlements */,
 				B10000000000000000000008 /* Info.plist */,
 			);
@@ -138,6 +149,7 @@
 			isa = PBXGroup;
 			children = (
 				B10000000000000000000003 /* ImportProfileView.swift */,
+				B10000000000000000000017 /* ProfileDetailView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -147,6 +159,7 @@
 			children = (
 				B10000000000000000000004 /* ProfileStoreViewModel.swift */,
 				B10000000000000000000005 /* VPNManager.swift */,
+				B10000000000000000000016 /* ProfileVault.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -164,6 +177,12 @@
 			isa = PBXGroup;
 			children = (
 				B10000000000000000000009 /* PacketTunnelProvider.swift */,
+				B10000000000000000000018 /* UtunFileDescriptor.swift */,
+				B10000000000000000000019 /* LibXrayRuntime.swift */,
+				B1000000000000000000001A /* TunnelStatusStore.swift */,
+				B1000000000000000000001E /* TunnelNetworkSettings.swift */,
+				B1000000000000000000001B /* LibXray-Bridging-Header.h */,
+				B1000000000000000000001D /* PrivacyInfo.xcprivacy */,
 				B1000000000000000000000A /* VpnRealityTunnel.entitlements */,
 				B1000000000000000000000B /* Info.plist */,
 			);
@@ -174,37 +193,16 @@
 			isa = PBXGroup;
 			children = (
 				B1000000000000000000000C /* Constants.swift */,
-				A1000000000000000000001C /* Models */,
-				A1000000000000000000001D /* Config */,
-				A1000000000000000000001E /* Store */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
 		};
-		A1000000000000000000001C /* Models */ = {
+		A10000000000000000000023 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				B1000000000000000000000D /* RealitySettings.swift */,
-				B1000000000000000000000E /* VlessProfile.swift */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		A1000000000000000000001D /* Config */ = {
-			isa = PBXGroup;
-			children = (
-				B1000000000000000000000F /* ProfileImporter.swift */,
-				B10000000000000000000010 /* XrayConfigBuilder.swift */,
+				B10000000000000000000030 /* Tunnel.xcconfig */,
 			);
 			path = Config;
-			sourceTree = "<group>";
-		};
-		A1000000000000000000001E /* Store */ = {
-			isa = PBXGroup;
-			children = (
-				B10000000000000000000011 /* AppGroupStore.swift */,
-			);
-			path = Store;
 			sourceTree = "<group>";
 		};
 		A10000000000000000000022 /* ThirdParty */ = {
@@ -234,6 +232,9 @@
 				A10000000000000000000001 /* PBXTargetDependency */,
 			);
 			name = VpnReality;
+			packageProductDependencies = (
+				A10000000000000000000041 /* VpnRealityCore */,
+			);
 			productName = VpnReality;
 			productReference = A10000000000000000000005 /* VpnReality.app */;
 			productType = "com.apple.product-type.application";
@@ -251,6 +252,9 @@
 			dependencies = (
 			);
 			name = VpnRealityTunnel;
+			packageProductDependencies = (
+				A10000000000000000000042 /* VpnRealityCore */,
+			);
 			productName = VpnRealityTunnel;
 			productReference = A10000000000000000000006 /* VpnRealityTunnel.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -283,6 +287,9 @@
 				Base,
 			);
 			mainGroup = A10000000000000000000003;
+			packageReferences = (
+				A10000000000000000000040 /* XCLocalSwiftPackageReference "../VpnRealityCore" */,
+			);
 			productRefGroup = A10000000000000000000004 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -301,6 +308,7 @@
 				C10000000000000000000006 /* Assets.xcassets in Resources */,
 				C10000000000000000000014 /* client-reality.example.json in Resources */,
 				C10000000000000000000015 /* vless-uri.example.txt in Resources */,
+				C10000000000000000000022 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -308,6 +316,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C10000000000000000000023 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -321,14 +330,12 @@
 				C10000000000000000000001 /* VpnRealityApp.swift in Sources */,
 				C10000000000000000000002 /* ContentView.swift in Sources */,
 				C10000000000000000000003 /* ImportProfileView.swift in Sources */,
+				C10000000000000000000018 /* ProfileDetailView.swift in Sources */,
 				C10000000000000000000004 /* ProfileStoreViewModel.swift in Sources */,
 				C10000000000000000000005 /* VPNManager.swift in Sources */,
+				C10000000000000000000017 /* ProfileVault.swift in Sources */,
+				C10000000000000000000025 /* TunnelStatusStore.swift in Sources */,
 				C10000000000000000000008 /* Constants.swift in Sources */,
-				C10000000000000000000009 /* RealitySettings.swift in Sources */,
-				C1000000000000000000000A /* VlessProfile.swift in Sources */,
-				C1000000000000000000000B /* ProfileImporter.swift in Sources */,
-				C1000000000000000000000C /* XrayConfigBuilder.swift in Sources */,
-				C1000000000000000000000D /* AppGroupStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -337,12 +344,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				C10000000000000000000007 /* PacketTunnelProvider.swift in Sources */,
+				C10000000000000000000019 /* UtunFileDescriptor.swift in Sources */,
+				C1000000000000000000001A /* LibXrayRuntime.swift in Sources */,
+				C1000000000000000000001B /* TunnelStatusStore.swift in Sources */,
+				C1000000000000000000001C /* TunnelNetworkSettings.swift in Sources */,
+				C10000000000000000000024 /* ProfileVault.swift in Sources */,
 				C1000000000000000000000E /* Constants.swift in Sources */,
-				C1000000000000000000000F /* RealitySettings.swift in Sources */,
-				C10000000000000000000010 /* VlessProfile.swift in Sources */,
-				C10000000000000000000011 /* ProfileImporter.swift in Sources */,
-				C10000000000000000000012 /* XrayConfigBuilder.swift in Sources */,
-				C10000000000000000000013 /* AppGroupStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -399,7 +406,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = VpnReality/VpnReality.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -408,7 +415,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.vpnreality;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -424,7 +431,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = VpnReality/VpnReality.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -433,7 +440,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.vpnreality;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -445,19 +452,21 @@
 		};
 		A10000000000000000000017 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B10000000000000000000030 /* Tunnel.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VpnRealityTunnel/VpnRealityTunnel.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = VpnRealityTunnel/Info.plist;
+				SWIFT_OBJC_BRIDGING_HEADER = "VpnRealityTunnel/LibXray-Bridging-Header.h";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.vpnreality.tunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -469,19 +478,21 @@
 		};
 		A10000000000000000000018 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B10000000000000000000030 /* Tunnel.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = VpnRealityTunnel/VpnRealityTunnel.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = VpnRealityTunnel/Info.plist;
+				SWIFT_OBJC_BRIDGING_HEADER = "VpnRealityTunnel/LibXray-Bridging-Header.h";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.vpnreality.tunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -522,6 +533,26 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A10000000000000000000040 /* XCLocalSwiftPackageReference "../VpnRealityCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../VpnRealityCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A10000000000000000000041 /* VpnRealityCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000040 /* XCLocalSwiftPackageReference "../VpnRealityCore" */;
+			productName = VpnRealityCore;
+		};
+		A10000000000000000000042 /* VpnRealityCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000000000000000000040 /* XCLocalSwiftPackageReference "../VpnRealityCore" */;
+			productName = VpnRealityCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A10000000000000000000002 /* Project object */;
 }

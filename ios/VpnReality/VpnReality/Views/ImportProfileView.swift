@@ -1,4 +1,5 @@
 import SwiftUI
+import VpnRealityCore
 
 struct ImportProfileView: View {
     var onImport: (VlessProfile) -> Void
@@ -7,6 +8,8 @@ struct ImportProfileView: View {
     @State private var text = ""
     @State private var errorText: String?
     @State private var preview: VlessProfile?
+    @State private var issues: [ProfileIssue] = []
+    @State private var revealSecrets = false
 
     var body: some View {
         NavigationStack {
@@ -15,23 +18,31 @@ struct ImportProfileView: View {
                     TextEditor(text: $text)
                         .frame(minHeight: 160)
                         .font(.system(.body, design: .monospaced))
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
                 } header: {
                     Text("JSON или vless://")
                 } footer: {
-                    Text("Поддерживается формат examples/client-reality.json и стандартные Reality share-ссылки.")
+                    Text("Формат тот же, что у десктопного vpn-reality import: examples/client-reality.json и ссылка vless:// с pbk, sid, sni, fp, spx.")
                 }
 
                 if let preview {
-                    Section("Превью") {
+                    Section("Разбор") {
                         LabeledContent("Имя", value: preview.name)
                         LabeledContent("Адрес", value: preview.endpointSummary)
-                        LabeledContent("UUID", value: preview.uuid)
-                        LabeledContent("pbk", value: preview.reality.publicKey)
-                        LabeledContent("sid", value: preview.reality.shortId)
                         LabeledContent("SNI", value: preview.reality.serverNames.joined(separator: ", "))
-                        LabeledContent("fp", value: preview.reality.fingerprint)
-                        LabeledContent("spx", value: preview.reality.spiderX)
-                        LabeledContent("flow", value: preview.flow)
+                        LabeledContent("UUID", value: revealSecrets ? preview.uuid : SecretRedaction.preview(preview.uuid))
+                        LabeledContent("Public key", value: revealSecrets ? preview.reality.publicKey : SecretRedaction.preview(preview.reality.publicKey))
+                        LabeledContent("Short ID", value: revealSecrets ? preview.reality.shortId : SecretRedaction.preview(preview.reality.shortId))
+                        Toggle("Показать секреты", isOn: $revealSecrets)
+                    }
+                }
+
+                if !issues.isEmpty {
+                    Section("Замечания") {
+                        ForEach(issues, id: \.code) { issue in
+                            Text(issue.message).foregroundStyle(.orange)
+                        }
                     }
                 }
 
@@ -42,12 +53,14 @@ struct ImportProfileView: View {
                 }
 
                 Section {
-                    Button("Разобрать") { parse() }
+                    Button("Разобрать", action: parse)
                     Button("Импортировать") {
                         parse()
-                        if let preview { onImport(preview) }
+                        if let preview, errorText == nil {
+                            onImport(preview)
+                        }
                     }
-                    .disabled(preview == nil && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(preview == nil)
                     Button("Вставить пример JSON") {
                         text = SampleData.clientRealityJSON
                         parse()
@@ -65,18 +78,20 @@ struct ImportProfileView: View {
 
     private func parse() {
         do {
-            preview = try ProfileImporter.importAny(text)
+            let profile = try ProfileImporter.importAny(text)
+            preview = profile
+            issues = ProfileValidator.connectIssues(profile)
             errorText = nil
         } catch {
             preview = nil
+            issues = []
             errorText = error.localizedDescription
         }
     }
 }
 
 enum SampleData {
-    /// Matches repo `examples/client-reality.json` (placeholders only).
-    static let clientRealityJSON = #"""
+    static let clientRealityJSON = """
     {
       "name": "example-reality",
       "address": "YOUR_SERVER_IP_OR_DOMAIN",
@@ -98,5 +113,5 @@ enum SampleData {
         "dest": "www.cloudflare.com:443"
       }
     }
-    """#
+    """
 }

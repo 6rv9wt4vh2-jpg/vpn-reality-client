@@ -1,7 +1,8 @@
+import Combine
 import Foundation
 import NetworkExtension
-import Combine
 import SwiftUI
+import VpnRealityCore
 
 @MainActor
 final class VPNManager: ObservableObject {
@@ -11,12 +12,9 @@ final class VPNManager: ObservableObject {
 
     private var manager: NETunnelProviderManager?
     private var observer: NSObjectProtocol?
+    private let statusStore = TunnelStatusStore()
 
-    var isConnected: Bool {
-        status == .connected || status == .connecting || status == .reasserting
-    }
-
-    var statusTextRU: String {
+    var statusText: String {
         switch status {
         case .invalid: return "Не настроено"
         case .disconnected: return "Отключено"
@@ -24,15 +22,14 @@ final class VPNManager: ObservableObject {
         case .connected: return "Подключено"
         case .reasserting: return "Переподключение…"
         case .disconnecting: return "Отключение…"
-        @unknown default: return "Неизвестно"
+        @unknown default: return "Неизвестное состояние"
         }
     }
 
     var statusColor: Color {
         switch status {
         case .connected: return .green
-        case .connecting, .reasserting: return .orange
-        case .disconnecting: return .orange
+        case .connecting, .reasserting, .disconnecting: return .orange
         default: return .secondary
         }
     }
@@ -44,33 +41,56 @@ final class VPNManager: ObservableObject {
             queue: .main
         ) { [weak self] note in
             Task { @MainActor in
-                if let session = note.object as? NEVPNConnection {
-                    self?.status = session.status
+                guard let self else { return }
+                if let connection = note.object as? NEVPNConnection {
+                    self.status = connection.status
                 }
+                self.absorbProviderStatus()
             }
         }
-        Task { await loadManager() }
+        Task { await reload() }
     }
 
     deinit {
         if let observer { NotificationCenter.default.removeObserver(observer) }
     }
 
-    func refreshStatus() {
-        status = manager?.connection.status ?? .invalid
+    func reload() async {
+        do {
+            let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+            manager = managers.first { manager in
+                let proto = manager.protocolConfiguration as? NETunnelProviderProtocol
+                return proto?.providerBundleIdentifier == AppConstants.tunnelProviderBundleID
+            } ?? managers.first
+            status = manager?.connection.status ?? .disconnected
+            absorbProviderStatus()
+        } catch {
+            lastError = error.localizedDescription
+        }
     }
 
-    func connect(profileName: String) async throws {
+    func connect(profile: VlessProfile) async throws {
+        let issues = ProfileValidator.connectIssues(profile)
+        if let first = issues.first {
+            lastError = first.message
+            throw TunnelClientError.message(first.message)
+        }
         isBusy = true
         lastError = nil
         defer { isBusy = false }
 
-        let mgr = try await ensureManager(displayName: profileName)
-        // iOS will show the system VPN permission sheet on first start.
-        try mgr.connection.startVPNTunnel(options: [
-            "profileName": profileName as NSString
-        ])
-        status = mgr.connection.status
+        let manager = try await ensureManager(profile: profile)
+        do {
+            try manager.connection.startVPNTunnel(options: [
+                "profileId": profile.id as NSString,
+            ])
+        } catch {
+            absorbProviderStatus()
+            let message = lastError ?? error.localizedDescription
+            lastError = message
+            throw TunnelClientError.message(message)
+        }
+        status = manager.connection.status
     }
 
     func disconnect() async {
@@ -80,33 +100,43 @@ final class VPNManager: ObservableObject {
         status = manager?.connection.status ?? .disconnected
     }
 
-    private func loadManager() async {
-        do {
-            let managers = try await NETunnelProviderManager.loadAllFromPreferences()
-            manager = managers.first
-            status = manager?.connection.status ?? .invalid
-        } catch {
-            lastError = error.localizedDescription
+    private func absorbProviderStatus() {
+        guard let report = statusStore.read() else { return }
+        guard report.state == "failed" else {
+            if status == .connected {
+                lastError = nil
+            }
+            return
         }
+        if status == .connected || status == .connecting { return }
+        lastError = report.message
     }
 
-    private func ensureManager(displayName: String) async throws -> NETunnelProviderManager {
-        if let manager { return manager }
-
-        let mgr = NETunnelProviderManager()
-        let proto = NETunnelProviderProtocol()
+    private func ensureManager(profile: VlessProfile) async throws -> NETunnelProviderManager {
+        let manager = self.manager ?? NETunnelProviderManager()
+        let proto = (manager.protocolConfiguration as? NETunnelProviderProtocol) ?? NETunnelProviderProtocol()
         proto.providerBundleIdentifier = AppConstants.tunnelProviderBundleID
-        proto.serverAddress = displayName
-        // Credentials / config live in App Group; protocol only needs provider id.
+        proto.serverAddress = profile.address
         proto.excludeLocalNetworks = true
+        proto.providerConfiguration = ["profileId": profile.id]
+        proto.disconnectOnSleep = false
 
-        mgr.protocolConfiguration = proto
-        mgr.localizedDescription = "VPN Reality (\(displayName))"
-        mgr.isEnabled = true
+        manager.protocolConfiguration = proto
+        manager.localizedDescription = "VPN Reality"
+        manager.isEnabled = true
+        try await manager.saveToPreferences()
+        try await manager.loadFromPreferences()
+        self.manager = manager
+        return manager
+    }
+}
 
-        try await mgr.saveToPreferences()
-        try await mgr.loadFromPreferences()
-        self.manager = mgr
-        return mgr
+enum TunnelClientError: LocalizedError {
+    case message(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .message(let text): return text
+        }
     }
 }

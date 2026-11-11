@@ -1,4 +1,5 @@
 import SwiftUI
+import VpnRealityCore
 
 struct ContentView: View {
     @EnvironmentObject private var profiles: ProfileStoreViewModel
@@ -11,7 +12,7 @@ struct ContentView: View {
             List {
                 statusSection
                 profilesSection
-                aboutSection
+                requirementsSection
             }
             .navigationTitle("VPN Reality")
             .toolbar {
@@ -23,15 +24,10 @@ struct ContentView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        Task { await toggleVPN() }
-                    } label: {
-                        Label(
-                            vpn.isConnected ? "Отключить" : "Подключить",
-                            systemImage: vpn.isConnected ? "network.slash" : "network"
-                        )
+                    Button("Обновить") {
+                        profiles.reload()
+                        Task { await vpn.reload() }
                     }
-                    .disabled(profiles.activeProfile == nil && !vpn.isConnected)
                 }
             }
             .sheet(isPresented: $showImport) {
@@ -52,47 +48,72 @@ struct ContentView: View {
             } message: {
                 Text(alertMessage ?? "")
             }
+            .refreshable {
+                profiles.reload()
+                await vpn.reload()
+            }
         }
     }
 
     private var statusSection: some View {
-        Section("Статус") {
-            HStack {
-                Circle()
-                    .fill(vpn.statusColor)
-                    .frame(width: 10, height: 10)
-                Text(vpn.statusTextRU)
-                Spacer()
-                if vpn.isBusy {
-                    ProgressView()
+        Section {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    Circle()
+                        .fill(vpn.statusColor)
+                        .frame(width: 12, height: 12)
+                    Text(vpn.statusText)
+                        .font(.title3.weight(.semibold))
+                    Spacer()
+                    if vpn.isBusy {
+                        ProgressView()
+                    }
                 }
+                if let profile = profiles.activeProfile {
+                    Text(profile.name)
+                        .font(.headline)
+                    Text("\(profile.endpointSummary) · SNI \(profile.primarySNI())")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Нет активного профиля. Импортируйте свою ссылку vless:// или JSON.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                if let error = vpn.lastError ?? profiles.lastError, !error.isEmpty {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
+                Button {
+                    Task { await toggle() }
+                } label: {
+                    Text(vpn.status == .connected || vpn.status == .connecting ? "Отключить" : "Подключить")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(profiles.activeProfile == nil && vpn.status != .connected && vpn.status != .connecting)
             }
-            if let name = profiles.activeProfile?.name {
-                Text("Профиль: \(name)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("Нет активного профиля — импортируйте JSON или vless://")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            if let note = vpn.lastError, !note.isEmpty {
-                Text(note)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
+            .padding(.vertical, 4)
         }
     }
 
     private var profilesSection: some View {
         Section("Профили") {
             if profiles.items.isEmpty {
-                Text("Список пуст. Добавьте `examples/client-reality.json` или URI.")
+                Text("Список пуст. Пример в репозитории — только образец полей, им подключаться нельзя.")
                     .foregroundStyle(.secondary)
             }
             ForEach(profiles.items) { profile in
-                Button {
-                    try? profiles.setActive(id: profile.id)
+                NavigationLink {
+                    ProfileDetailView(profile: profile) {
+                        do {
+                            try profiles.setActive(id: profile.id)
+                        } catch {
+                            alertMessage = error.localizedDescription
+                        }
+                    }
                 } label: {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
@@ -100,9 +121,12 @@ struct ContentView: View {
                             Text(profile.endpointSummary)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text("SNI: \(profile.primarySNI()) · fp: \(profile.reality.fingerprint)")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
+                            if let issue = ProfileValidator.connectIssues(profile).first {
+                                Text(issue.message)
+                                    .font(.caption2)
+                                    .foregroundStyle(.orange)
+                                    .lineLimit(2)
+                            }
                         }
                         Spacer()
                         if profiles.activeId == profile.id {
@@ -113,39 +137,54 @@ struct ContentView: View {
                 }
                 .swipeActions {
                     Button(role: .destructive) {
-                        try? profiles.delete(id: profile.id)
+                        do {
+                            try profiles.delete(id: profile.id)
+                        } catch {
+                            alertMessage = error.localizedDescription
+                        }
                     } label: {
                         Label("Удалить", systemImage: "trash")
                     }
+                    Button {
+                        do {
+                            try profiles.setActive(id: profile.id)
+                        } catch {
+                            alertMessage = error.localizedDescription
+                        }
+                    } label: {
+                        Label("Выбрать", systemImage: "checkmark")
+                    }
+                    .tint(.blue)
                 }
             }
         }
     }
 
-    private var aboutSection: some View {
-        Section("О приложении") {
-            Text("VLESS + Reality · каркас iOS Network Extension")
+    private var requirementsSection: some View {
+        Section("Как это устроено") {
+            Text("Подключение поднимает системный Packet Tunnel и передаёт его utun в Xray-core (XTLS/libXray) с исходящим VLESS + Reality.")
                 .font(.footnote)
-            Text("Без связанного LibXray/sing-box и оплаченного Apple Developer VPN на устройстве не заработает.")
+            Text("Если ядро не вшито в сборку, профиль пустой или система не выдала VPN, туннель завершается ошибкой и не остаётся «подключённым».")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            Text("Нужны Mac, Xcode, платная программа Apple Developer, подпись Network Extension и libXray \(LibXrayInvoke.pinnedRelease). Этот экран сам по себе трафик не проксирует.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
     }
 
-    private func toggleVPN() async {
+    private func toggle() async {
+        if vpn.status == .connected || vpn.status == .connecting || vpn.status == .reasserting {
+            await vpn.disconnect()
+            return
+        }
+        guard let profile = profiles.activeProfile else {
+            alertMessage = "Сначала выберите профиль"
+            return
+        }
         do {
-            if vpn.isConnected {
-                await vpn.disconnect()
-            } else {
-                guard let profile = profiles.activeProfile else {
-                    alertMessage = "Сначала выберите профиль"
-                    return
-                }
-                let json = try XrayConfigBuilder.jsonString(profile: profile, forTunnel: true)
-                try AppGroupStore.shared.writeRuntimeConfigJSON(json)
-                try profiles.setActive(id: profile.id)
-                try await vpn.connect(profileName: profile.name)
-            }
+            try profiles.setActive(id: profile.id)
+            try await vpn.connect(profile: profile)
         } catch {
             alertMessage = error.localizedDescription
         }

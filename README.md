@@ -13,14 +13,15 @@
 Python CLI + optional local FastAPI dashboard. Profiles store Reality fields (`publicKey`, `shortId`, `serverNames`, `fingerprint`, `spiderX`, optional `dest`). The app generates xray JSON, starts/stops the core, and listens on `127.0.0.1:10808` (SOCKS5) and optionally `10809` (HTTP).
 
 
-## iOS app (scaffold)
+## iOS app
 
-SwiftUI + Packet Tunnel Provider Xcode project lives in **[`ios/`](ios/README.md)**.
+SwiftUI + Packet Tunnel project: **[`ios/`](ios/README.md)**.
 
-- Open `ios/VpnReality/VpnReality.xcodeproj` on a Mac (Xcode 15+)
-- Profiles, Reality fields, JSON/`vless://` import shared with this desktop model
-- Tunnel core (LibXray / sing-box) is **not** bundled — link on Mac; see `ios/VpnReality/ThirdParty/`
-- Requires paid Apple Developer for on-device VPN; this repo does **not** ship an App Store binary
+- Profiles use the same VLESS + Reality fields as this desktop client
+- The tunnel is wired to official **libXray `v26.11.9`** (`CGoInvoke` / Xray `tun` + `xray.tun.fd`)
+- The xcframework is not in git. On a Mac, `ios/VpnReality/ThirdParty/fetch-libxray.sh` downloads the pinned build
+- Without that binary, a paid Apple Developer team, and a device, the tunnel **fails closed** instead of pretending to connect
+- Desktop SOCKS/HTTP behavior below is unchanged
 
 ## Stack
 
@@ -120,13 +121,13 @@ examples/            # Placeholder client config + URI
 docs/                # Server Reality checklist
 bin/                 # Downloaded xray (gitignored)
 data/                # profiles + runtime config (gitignored contents)
-ios/                 # SwiftUI + Packet Tunnel Xcode scaffold (see ios/README.md)
+ios/                 # iPhone app + Packet Tunnel (see ios/README.md)
 ```
 
 ## Limitations (MVP)
 
-- Desktop: no system-wide TUN/routing — proxy only
-- iOS: Xcode scaffold only until LibXray/sing-box is linked (see `ios/README.md`)
+- Desktop: no system-wide TUN/routing — proxy only (this behavior is unchanged)
+- iOS: packet tunnel calls libXray when the pinned xcframework is linked; otherwise it fails closed (see `ios/README.md`). No claim that a device build was run from this repository's Linux checks
 - No auto system proxy configuration
 - No tray/native GUI (web UI is local-only)
 - No traffic split UI beyond basic private-IP direct rule

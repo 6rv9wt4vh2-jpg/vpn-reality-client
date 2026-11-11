@@ -1,57 +1,58 @@
 import NetworkExtension
 import os.log
+import VpnRealityCore
 
-/// Packet Tunnel Provider — App ↔ Shared models ↔ this extension.
+/// Packet tunnel for VLESS + Reality.
 ///
-/// Integration status:
-/// - ✅ Reads active profile / runtime xray JSON from App Group
-/// - ✅ Applies basic NEPacketTunnelNetworkSettings (utun)
-/// - ⚠️ Does NOT yet run a real Xray/sing-box core (stub)
-///
-/// To make VPN actually proxy traffic on a device:
-/// 1. Link LibXray.xcframework or SwiftyXrayKit / Libbox (see ../ThirdParty/README.md)
-/// 2. Paid Apple Developer + Network Extension entitlement + provisioning
-/// 3. Replace `startCoreIfAvailable` stub with real start/stop
+/// Traffic path, once libXray is linked and the device is signed for Network Extension:
+/// NEPacketTunnelFlow utun fd → Xray `tun` inbound → VLESS + Reality outbound.
+/// `startTunnel` calls the system completion with nil only after `runXray` reports success.
+/// A missing core, profile, or utun fd fails the tunnel instead of leaving a black hole.
 final class PacketTunnelProvider: NEPacketTunnelProvider {
     private let log = Logger(subsystem: AppConstants.appBundleID, category: "tunnel")
-    private var coreHandle: TunnelCoreHandle?
+    private let statusStore = TunnelStatusStore()
+    private var coreRunning = false
 
     override func startTunnel(
         options: [String: NSObject]?,
         completionHandler: @escaping (Error?) -> Void
     ) {
-        log.info("startTunnel options=\(String(describing: options), privacy: .public)")
-
-        guard let profile = AppGroupStore.shared.activeProfile() else {
-            completionHandler(TunnelError.noProfile)
-            return
-        }
+        log.info("startTunnel")
+        let previousUtuns = UtunFileDescriptor.scan()
 
         do {
-            let json = try AppGroupStore.shared.readRuntimeConfigJSON()
-                ?? XrayConfigBuilder.jsonString(profile: profile, forTunnel: true)
-            try AppGroupStore.shared.writeRuntimeConfigJSON(json)
+            guard LibXrayRuntime.isLinked else { throw TunnelFailure.coreNotLinked }
+            guard let profile = try ProfileVault.shared.activeProfile() else {
+                throw TunnelFailure.noProfile
+            }
+            let issues = ProfileValidator.connectIssues(profile)
+            if let first = issues.first {
+                throw TunnelFailure.invalidProfile(first.message)
+            }
+            let settings = TunnelNetworkSettings.make(for: profile)
+            setTunnelNetworkSettings(settings) { [weak self] error in
+                guard let self else {
+                    completionHandler(error ?? TunnelFailure.coreRejected("Расширение освобождено до старта"))
+                    return
+                }
+                if let error {
+                    self.fail(error, profile: profile, completion: completionHandler)
+                    return
+                }
+                do {
+                    let fd = try UtunFileDescriptor.resolve(packetFlow: self.packetFlow, previous: previousUtuns)
+                    let config = try XrayConfigBuilder.tunnelJSON(profile: profile, tunFD: fd)
+                    let version = try LibXrayRuntime.run(xrayJSON: config)
+                    self.coreRunning = true
+                    self.statusStore.write(.running(coreVersion: version))
+                    self.log.info("Xray tunnel is up")
+                    completionHandler(nil)
+                } catch {
+                    self.fail(error, profile: profile, completion: completionHandler)
+                }
+            }
         } catch {
-            completionHandler(error)
-            return
-        }
-
-        let settings = makeNetworkSettings(for: profile)
-        setTunnelNetworkSettings(settings) { [weak self] error in
-            guard let self else {
-                completionHandler(error)
-                return
-            }
-            if let error {
-                completionHandler(error)
-                return
-            }
-            do {
-                try self.startCoreIfAvailable(profile: profile)
-                completionHandler(nil)
-            } catch {
-                completionHandler(error)
-            }
+            fail(error, profile: nil, completion: completionHandler)
         }
     }
 
@@ -59,94 +60,92 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         with reason: NEProviderStopReason,
         completionHandler: @escaping () -> Void
     ) {
-        log.info("stopTunnel reason=\(String(describing: reason), privacy: .public)")
-        coreHandle?.stop()
-        coreHandle = nil
+        log.info("stopTunnel reason=\(reason.rawValue, privacy: .public)")
+        if coreRunning {
+            LibXrayRuntime.stop()
+            coreRunning = false
+        }
+        statusStore.write(.stopped())
         completionHandler()
     }
 
     override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
-        // Optional control channel App → Extension
-        let reply = #"{"ok":true,"core":"\#(coreHandle == nil ? "stub" : "linked")"}"#
-        completionHandler?(reply.data(using: .utf8))
-    }
-
-    // MARK: - Network settings
-
-    private func makeNetworkSettings(for profile: VlessProfile) -> NEPacketTunnelNetworkSettings {
-        // Full-tunnel style defaults; refine after core is linked (split tunnel / DNS).
-        let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: profile.address)
-        settings.mtu = 1500
-
-        let ipv4 = NEIPv4Settings(addresses: ["10.0.0.2"], subnetMasks: ["255.255.255.0"])
-        ipv4.includedRoutes = [NEIPv4Route.default()]
-        // Keep LAN reachable when excludeLocalNetworks is set on the protocol.
-        ipv4.excludedRoutes = [
-            NEIPv4Route(destinationAddress: "10.0.0.0", subnetMask: "255.0.0.0"),
-            NEIPv4Route(destinationAddress: "172.16.0.0", subnetMask: "255.240.0.0"),
-            NEIPv4Route(destinationAddress: "192.168.0.0", subnetMask: "255.255.0.0"),
+        let report = statusStore.read()
+        let payload: [String: Any] = [
+            "ok": true,
+            "linked": LibXrayRuntime.isLinked,
+            "running": coreRunning,
+            "state": report?.state ?? "unknown",
+            "code": report?.code ?? "",
+            "coreVersion": report?.coreVersion ?? "",
         ]
-        settings.ipv4Settings = ipv4
-
-        let dns = NEDNSSettings(servers: ["1.1.1.1", "8.8.8.8"])
-        dns.matchDomains = [""] // capture all DNS when core is live
-        settings.dnsSettings = dns
-
-        return settings
+        let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
+        completionHandler?(data)
     }
 
-    // MARK: - Core bridge (stub → LibXray / sing-box)
-
-    private func startCoreIfAvailable(profile: VlessProfile) throws {
-        #if canImport(LibXray)
-        // Example when LibXray.xcframework is linked (API names vary by build):
-        // let dir = FileManager.default.containerURL(...)!
-        // let conf = dir.appendingPathComponent("runtime-config.json").path
-        // LibXrayRunXray(dir.path, conf, /* memory limit */)
-        // coreHandle = LibXrayHandle()
-        // return
-        #endif
-
-        #if canImport(SwiftyXrayKit)
-        // Preferred path on Apple platforms — see ThirdParty/README.md
-        // let bridge = XrayBridge(packetFlow: packetFlow)
-        // try bridge.start(config: .json(json), dataDir: geoDir, finalConfigPath: finalURL)
-        // coreHandle = SwiftyBridgeHandle(bridge)
-        // return
-        #endif
-
-        #if canImport(Libbox)
-        // Alternative: sing-box Libbox + PlatformInterface OpenTun
-        #endif
-
-        // Honest stub: tunnel interface comes up, but packets are not proxied
-        // until a real core is linked. Documented in ios/README.md.
-        log.warning("No Xray/sing-box core linked — tunnel stub only. Profile=\(profile.name, privacy: .public)")
-        coreHandle = StubCoreHandle()
-        // Do not throw: allows UI/status plumbing & provisioning tests without core.
+    private func fail(_ error: Error, profile: VlessProfile?, completion: @escaping (Error?) -> Void) {
+        if coreRunning {
+            LibXrayRuntime.stop()
+            coreRunning = false
+        }
+        let failure = TunnelFailure.wrap(error, profile: profile)
+        statusStore.write(.failed(code: failure.code, message: failure.localizedDescription))
+        log.error("tunnel failed code=\(failure.code, privacy: .public)")
+        completion(failure)
     }
 }
 
-// MARK: - Core handle abstraction
-
-protocol TunnelCoreHandle: AnyObject {
-    func stop()
-}
-
-final class StubCoreHandle: TunnelCoreHandle {
-    func stop() {}
-}
-
-enum TunnelError: LocalizedError {
-    case noProfile
+enum TunnelFailure: LocalizedError {
     case coreNotLinked
+    case noProfile
+    case invalidProfile(String)
+    case tunFdUnavailable
+    case coreRejected(String)
+    case keychain(String)
+
+    var code: String {
+        switch self {
+        case .coreNotLinked: return "coreNotLinked"
+        case .noProfile: return "noProfile"
+        case .invalidProfile: return "invalidProfile"
+        case .tunFdUnavailable: return "tunFdUnavailable"
+        case .coreRejected: return "coreRejected"
+        case .keychain: return "keychain"
+        }
+    }
 
     var errorDescription: String? {
         switch self {
-        case .noProfile:
-            return "Нет активного профиля в App Group"
         case .coreNotLinked:
-            return "LibXray/sing-box не подключён — см. ios/VpnReality/ThirdParty/README.md"
+            return "В сборку не вшит libXray \(LibXrayInvoke.pinnedRelease). Туннель не включается. На Mac запустите ios/VpnReality/ThirdParty/fetch-libxray.sh и пересоберите расширение."
+        case .noProfile:
+            return "В Keychain нет активного профиля. Импортируйте свой VLESS + Reality и проверьте общий keychain-access-group."
+        case .invalidProfile(let message):
+            return message
+        case .tunFdUnavailable:
+            return "Network Extension не отдал файловый дескриптор utun. Туннель остановлен, трафик не перехватывался."
+        case .coreRejected(let message):
+            return "Xray не запустил туннель: \(message)"
+        case .keychain(let message):
+            return message
         }
+    }
+
+    static func wrap(_ error: Error, profile: VlessProfile?) -> TunnelFailure {
+        if let failure = error as? TunnelFailure {
+            if case .coreRejected(let message) = failure {
+                return .coreRejected(redact(message, profile: profile))
+            }
+            return failure
+        }
+        if let vault = error as? ProfileVaultError {
+            return .keychain(vault.localizedDescription)
+        }
+        return .coreRejected(redact(error.localizedDescription, profile: profile))
+    }
+
+    private static func redact(_ message: String, profile: VlessProfile?) -> String {
+        guard let profile else { return SecretRedaction.redact(message, secrets: []) }
+        return SecretRedaction.redact(message, secrets: SecretRedaction.secrets(in: profile))
     }
 }
